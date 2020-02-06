@@ -42,7 +42,7 @@ export class CacheRoute extends React.Component<CacheRouteProps> {
                     return null;
                 }
 
-                let props = Object.assign({}, routeProps) as CacheRouteComponentProps;
+                let props = Object.assign({}, routeProps, {match}) as CacheRouteComponentProps;
 
                 if (Array.isArray(children) && children.length === 0) {
                     children = null;

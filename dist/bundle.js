@@ -782,7 +782,7 @@ var CacheRoute = /** @class */ (function (_super) {
             if (!match && !_this.props.cache) {
                 return null;
             }
-            var props = Object.assign({}, routeProps);
+            var props = Object.assign({}, routeProps, { match: match });
             if (Array.isArray(children) && children.length === 0) {
                 children = null;
             }

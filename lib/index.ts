@@ -13,6 +13,7 @@ interface RouterComponentFactory {
     (): Promise<{ default: any }>
 }
 
+
 export interface Router {
     name?: string,
     path?: string,
