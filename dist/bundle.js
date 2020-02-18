@@ -838,23 +838,33 @@ function useCreate(create) {
 function useDestroy(destroy) {
     React.useEffect(function () { return function () { return destroy(); }; }, []);
 }
+// // 路由缓存激活钩子
+// export function useActivate(callback: () => void | undefined) {
+//     useEffect(() => {
+//         const path = Navigation.location().pathname ?? "";
+//         const token = PubSub.subscribe("activate" + path, callback)
+//         return () => PubSub.unsubscribe(token);
+//     }, [])
+// }
+// // 路由缓存失激钩子
+// export function useDeactivated(callback: () => void | undefined) {
+//     useEffect(() => {
+//         const path = Navigation.location().pathname ?? "";
+//         const token = PubSub.subscribe("deactivated" + path, callback)
+//         return () => PubSub.unsubscribe(token);
+//     }, [])
+// }
 // 路由缓存激活钩子
 function useActivate(callback) {
+    var _a = React.useState(null), state = _a[0], setState = _a[1];
     React.useEffect(function () {
-        var _a;
-        var path = (_a = Navigation.location().pathname, (_a !== null && _a !== void 0 ? _a : ""));
-        var token = pubsub.subscribe("activate" + path, callback);
-        return function () { return pubsub.unsubscribe(token); };
-    }, []);
+        state == null && setState(Navigation.location().pathname);
+        Navigation.location().pathname === state && callback();
+    }, [Navigation.location().pathname]);
 }
 // 路由缓存失激钩子
 function useDeactivated(callback) {
-    React.useEffect(function () {
-        var _a;
-        var path = (_a = Navigation.location().pathname, (_a !== null && _a !== void 0 ? _a : ""));
-        var token = pubsub.subscribe("deactivated" + path, callback);
-        return function () { return pubsub.unsubscribe(token); };
-    }, []);
+    // TODO
 }
 // 当前router
 function useCurrentRoute() {

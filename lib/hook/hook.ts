@@ -3,7 +3,6 @@ import {useEffect, useState} from "react";
 import {fetch} from "../http/api";
 import {findDeep} from "../core/utils";
 import {matchPath} from "react-router-dom"
-import PubSub from "pubsub-js"
 
 // axios.interceptors.response.use(function (response) {
 //     return response.data;
@@ -30,22 +29,37 @@ export function useDestroy(destroy: () => void | undefined) {
     useEffect(() => () => destroy(), [])
 }
 
+// // 路由缓存激活钩子
+// export function useActivate(callback: () => void | undefined) {
+//     useEffect(() => {
+//         const path = Navigation.location().pathname ?? "";
+//         const token = PubSub.subscribe("activate" + path, callback)
+//         return () => PubSub.unsubscribe(token);
+//     }, [])
+// }
+
+// // 路由缓存失激钩子
+// export function useDeactivated(callback: () => void | undefined) {
+//     useEffect(() => {
+//         const path = Navigation.location().pathname ?? "";
+//         const token = PubSub.subscribe("deactivated" + path, callback)
+//         return () => PubSub.unsubscribe(token);
+//     }, [])
+// }
+
 // 路由缓存激活钩子
 export function useActivate(callback: () => void | undefined) {
+    const [state, setState] = useState<string>(null);
     useEffect(() => {
-        const path = Navigation.location().pathname ?? "";
-        const token = PubSub.subscribe("activate" + path, callback)
-        return () => PubSub.unsubscribe(token);
-    }, [])
+        state == null && setState(Navigation.location().pathname);
+        Navigation.location().pathname === state && callback();
+    }, [Navigation.location().pathname])
 }
+
 
 // 路由缓存失激钩子
 export function useDeactivated(callback: () => void | undefined) {
-    useEffect(() => {
-        const path = Navigation.location().pathname ?? "";
-        const token = PubSub.subscribe("deactivated" + path, callback)
-        return () => PubSub.unsubscribe(token);
-    }, [])
+ // TODO
 }
 
 
