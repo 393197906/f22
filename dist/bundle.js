@@ -95,7 +95,8 @@ var Navigation = /** @class */ (function () {
         return _routerApiRouter.location;
     };
     Navigation.params = function () {
-        return _routerApiRouter.match.params;
+        var _a;
+        return (_a = _routerApiRouter.match) === null || _a === void 0 ? void 0 : _a.params;
     };
     Navigation.push = function (path) {
         return _routerApiRouter.history.push(path);
@@ -277,6 +278,13 @@ var CacheManager = /** @class */ (function () {
         this.cacheKeys = [];
         this.maxCache = maxCache;
     }
+    Object.defineProperty(CacheManager.prototype, "caches", {
+        get: function () {
+            return this.cache;
+        },
+        enumerable: true,
+        configurable: true
+    });
     CacheManager.prototype.add = function (path, data, local) {
         if (local === void 0) { local = false; }
         if (local) {
@@ -338,350 +346,6 @@ var Updater = /** @class */ (function (_super) {
 }(React.Component));
 var RouteUpdater = reactRouterDom.withRouter(Updater);
 
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-function createCommonjsModule(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
-}
-
-var pubsub = createCommonjsModule(function (module, exports) {
-/**
- * Copyright (c) 2010,2011,2012,2013,2014 Morgan Roderick http://roderick.dk
- * License: MIT - http://mrgnrdrck.mit-license.org
- *
- * https://github.com/mroderick/PubSubJS
- */
-
-(function (root, factory){
-
-    var PubSub = {};
-    root.PubSub = PubSub;
-
-    var define = root.define;
-
-    factory(PubSub);
-
-    // AMD support
-    if (typeof define === 'function' && define.amd){
-        define(function() { return PubSub; });
-
-        // CommonJS and Node.js module support
-    } else {
-        if (module !== undefined && module.exports) {
-            exports = module.exports = PubSub; // Node.js specific `module.exports`
-        }
-        exports.PubSub = PubSub; // CommonJS module 1.1.1 spec
-        module.exports = exports = PubSub; // CommonJS
-    }
-
-}(( typeof window === 'object' && window ) || commonjsGlobal, function (PubSub){
-
-    var messages = {},
-        lastUid = -1;
-
-    function hasKeys(obj){
-        var key;
-
-        for (key in obj){
-            if ( obj.hasOwnProperty(key) ){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Returns a function that throws the passed exception, for use as argument for setTimeout
-     * @alias throwException
-     * @function
-     * @param { Object } ex An Error object
-     */
-    function throwException( ex ){
-        return function reThrowException(){
-            throw ex;
-        };
-    }
-
-    function callSubscriberWithDelayedExceptions( subscriber, message, data ){
-        try {
-            subscriber( message, data );
-        } catch( ex ){
-            setTimeout( throwException( ex ), 0);
-        }
-    }
-
-    function callSubscriberWithImmediateExceptions( subscriber, message, data ){
-        subscriber( message, data );
-    }
-
-    function deliverMessage( originalMessage, matchedMessage, data, immediateExceptions ){
-        var subscribers = messages[matchedMessage],
-            callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions,
-            s;
-
-        if ( !messages.hasOwnProperty( matchedMessage ) ) {
-            return;
-        }
-
-        for (s in subscribers){
-            if ( subscribers.hasOwnProperty(s)){
-                callSubscriber( subscribers[s], originalMessage, data );
-            }
-        }
-    }
-
-    function createDeliveryFunction( message, data, immediateExceptions ){
-        return function deliverNamespaced(){
-            var topic = String( message ),
-                position = topic.lastIndexOf( '.' );
-
-            // deliver the message as it is now
-            deliverMessage(message, message, data, immediateExceptions);
-
-            // trim the hierarchy and deliver message to each level
-            while( position !== -1 ){
-                topic = topic.substr( 0, position );
-                position = topic.lastIndexOf('.');
-                deliverMessage( message, topic, data, immediateExceptions );
-            }
-        };
-    }
-
-    function messageHasSubscribers( message ){
-        var topic = String( message ),
-            found = Boolean(messages.hasOwnProperty( topic ) && hasKeys(messages[topic])),
-            position = topic.lastIndexOf( '.' );
-
-        while ( !found && position !== -1 ){
-            topic = topic.substr( 0, position );
-            position = topic.lastIndexOf( '.' );
-            found = Boolean(messages.hasOwnProperty( topic ) && hasKeys(messages[topic]));
-        }
-
-        return found;
-    }
-
-    function publish( message, data, sync, immediateExceptions ){
-        message = (typeof message === 'symbol') ? message.toString() : message;
-
-        var deliver = createDeliveryFunction( message, data, immediateExceptions ),
-            hasSubscribers = messageHasSubscribers( message );
-
-        if ( !hasSubscribers ){
-            return false;
-        }
-
-        if ( sync === true ){
-            deliver();
-        } else {
-            setTimeout( deliver, 0 );
-        }
-        return true;
-    }
-
-    /**
-     * Publishes the message, passing the data to it's subscribers
-     * @function
-     * @alias publish
-     * @param { String } message The message to publish
-     * @param {} data The data to pass to subscribers
-     * @return { Boolean }
-     */
-    PubSub.publish = function( message, data ){
-        return publish( message, data, false, PubSub.immediateExceptions );
-    };
-
-    /**
-     * Publishes the message synchronously, passing the data to it's subscribers
-     * @function
-     * @alias publishSync
-     * @param { String } message The message to publish
-     * @param {} data The data to pass to subscribers
-     * @return { Boolean }
-     */
-    PubSub.publishSync = function( message, data ){
-        return publish( message, data, true, PubSub.immediateExceptions );
-    };
-
-    /**
-     * Subscribes the passed function to the passed message. Every returned token is unique and should be stored if you need to unsubscribe
-     * @function
-     * @alias subscribe
-     * @param { String } message The message to subscribe to
-     * @param { Function } func The function to call when a new message is published
-     * @return { String }
-     */
-    PubSub.subscribe = function( message, func ){
-        if ( typeof func !== 'function'){
-            return false;
-        }
-
-        message = (typeof message === 'symbol') ? message.toString() : message;
-
-        // message is not registered yet
-        if ( !messages.hasOwnProperty( message ) ){
-            messages[message] = {};
-        }
-
-        // forcing token as String, to allow for future expansions without breaking usage
-        // and allow for easy use as key names for the 'messages' object
-        var token = 'uid_' + String(++lastUid);
-        messages[message][token] = func;
-        
-        // return token for unsubscribing
-        return token;
-    };
-
-    /**
-     * Subscribes the passed function to the passed message once
-     * @function
-     * @alias subscribeOnce
-     * @param { String } message The message to subscribe to
-     * @param { Function } func The function to call when a new message is published
-     * @return { PubSub }
-     */
-    PubSub.subscribeOnce = function( message, func ){
-        var token = PubSub.subscribe( message, function(){
-            // before func apply, unsubscribe message
-            PubSub.unsubscribe( token );
-            func.apply( this, arguments );
-        });
-        return PubSub;
-    };
-
-    /**
-     * Clears all subscriptions
-     * @function
-     * @public
-     * @alias clearAllSubscriptions
-     */
-    PubSub.clearAllSubscriptions = function clearAllSubscriptions(){
-        messages = {};
-    };
-
-    /**
-     * Clear subscriptions by the topic
-     * @function
-     * @public
-     * @alias clearAllSubscriptions
-     * @return { int }
-     */
-    PubSub.clearSubscriptions = function clearSubscriptions(topic){
-        var m;
-        for (m in messages){
-            if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0){
-                delete messages[m];
-            }
-        }
-    };
-
-    /** 
-       Count subscriptions by the topic
-     * @function
-     * @public
-     * @alias countSubscriptions
-     * @return { Array }
-    */
-    PubSub.countSubscriptions = function countSubscriptions(topic){
-        var m;
-        var count = 0;
-        for (m in messages){
-            if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0){
-                count++;
-            }
-        }
-        return count;
-    };
-
-    
-    /** 
-       Gets subscriptions by the topic
-     * @function
-     * @public
-     * @alias getSubscriptions
-    */
-    PubSub.getSubscriptions = function getSubscriptions(topic){
-        var m;
-        var list = [];
-        for (m in messages){
-            if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0){
-                list.push(m);
-            }
-        }
-        return list;
-    };
-
-    /**
-     * Removes subscriptions
-     *
-     * - When passed a token, removes a specific subscription.
-     *
-	 * - When passed a function, removes all subscriptions for that function
-     *
-	 * - When passed a topic, removes all subscriptions for that topic (hierarchy)
-     * @function
-     * @public
-     * @alias subscribeOnce
-     * @param { String | Function } value A token, function or topic to unsubscribe from
-     * @example // Unsubscribing with a token
-     * var token = PubSub.subscribe('mytopic', myFunc);
-     * PubSub.unsubscribe(token);
-     * @example // Unsubscribing with a function
-     * PubSub.unsubscribe(myFunc);
-     * @example // Unsubscribing from a topic
-     * PubSub.unsubscribe('mytopic');
-     */
-    PubSub.unsubscribe = function(value){
-        var descendantTopicExists = function(topic) {
-                var m;
-                for ( m in messages ){
-                    if ( messages.hasOwnProperty(m) && m.indexOf(topic) === 0 ){
-                        // a descendant of the topic exists:
-                        return true;
-                    }
-                }
-
-                return false;
-            },
-            isTopic    = typeof value === 'string' && ( messages.hasOwnProperty(value) || descendantTopicExists(value) ),
-            isToken    = !isTopic && typeof value === 'string',
-            isFunction = typeof value === 'function',
-            result = false,
-            m, message, t;
-
-        if (isTopic){
-            PubSub.clearSubscriptions(value);
-            return;
-        }
-
-        for ( m in messages ){
-            if ( messages.hasOwnProperty( m ) ){
-                message = messages[m];
-
-                if ( isToken && message[value] ){
-                    delete message[value];
-                    result = value;
-                    // tokens are unique, so we can just stop here
-                    break;
-                }
-
-                if (isFunction) {
-                    for ( t in message ){
-                        if (message.hasOwnProperty(t) && message[t] === value){
-                            delete message[t];
-                            result = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return result;
-    };
-}));
-});
-var pubsub_1 = pubsub.PubSub;
-
 // 匹配缓存
 function matchCache(path, cacheKeys) {
     return !!cacheKeys.find(function (item) { return item === path; });
@@ -720,25 +384,17 @@ var CacheSwitch = /** @class */ (function (_super) {
                     if (!isCache) { // 如果没被缓存则清除缓存
                         cacheManager.delete(key);
                     }
-                    var cacheRoute_1 = cacheManager.get(key);
-                    setTimeout(function () {
-                        // 触发（激活）钩子
-                        cacheRoute_1 && match && pubsub.publish("activate" + key, null);
-                        // 触发（失激钩子）
-                        if (cacheRoute_1 && !match && prevPath !== currentPath) {
-                            pubsub.publish("deactivated" + prevPath, null);
-                        }
-                    });
+                    var cacheRoute = cacheManager.get(key);
                     // 未匹配或者cacheRoute存在时且开启了缓存时直接返回；
-                    if (!match || cacheRoute_1) {
-                        return cacheRoute_1;
+                    if (!match || cacheRoute) {
+                        return cacheRoute;
                     }
-                    cacheRoute_1 = React.cloneElement(child, __assign(__assign({ key: key || index }, props), { cache: isCache }));
+                    cacheRoute = React.cloneElement(child, __assign(__assign({ key: key || index }, props), { cache: isCache }));
                     // 判断是否开启缓存
                     if (key && isCache) {
-                        cacheManager.add(key, cacheRoute_1, props.local);
+                        cacheManager.add(key, cacheRoute, props.local);
                     }
-                    return cacheRoute_1;
+                    return cacheRoute;
                 }
                 else {
                     return match ? React.cloneElement(child, __assign({ key: key || index }, props)) : null;

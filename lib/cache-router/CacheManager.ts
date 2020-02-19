@@ -12,6 +12,10 @@ export class CacheManager {
         this.maxCache = maxCache;
     }
 
+    get caches() {
+        return this.cache;
+    }
+
     add(path: string, data: any, local: boolean = false): void {
         if (local) {
             this.localCache[path] = data;

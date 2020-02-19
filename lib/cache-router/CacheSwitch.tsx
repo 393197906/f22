@@ -65,14 +65,6 @@ export class CacheSwitch extends React.Component<CacheSwitchProps> {
                             cacheManager.delete(key)
                         }
                         let cacheRoute = cacheManager.get(key);
-                        setTimeout(() => {   // 不阻塞线程
-                            // 触发（激活）钩子
-                            cacheRoute && match && PubSub.publish("activate" + key, null)
-                            // 触发（失激钩子）
-                            if (cacheRoute && !match && prevPath !== currentPath) {
-                                PubSub.publish("deactivated" + prevPath, null)
-                            }
-                        })
 
 
                         // 未匹配或者cacheRoute存在时且开启了缓存时直接返回；
@@ -99,6 +91,6 @@ export class CacheSwitch extends React.Component<CacheSwitchProps> {
                     }
                 });
             }}
-                </RouteUpdater>;
-                }
-                }
+        </RouteUpdater>;
+    }
+}

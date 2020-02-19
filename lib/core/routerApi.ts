@@ -35,7 +35,7 @@ export class Navigation {
 
 
     static params<T = any>() {
-        return _routerApiRouter.match.params as T
+        return _routerApiRouter.match?.params as T
     }
 
 
